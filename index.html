@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mining Rush</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(160deg,#08152d,#102f59);color:white;min-height:100vh}
+.app{max-width:430px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;align-items:center}
+h1{margin:5px 0;font-size:27px}.sub{opacity:.7;font-size:13px}.card{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;margin-top:15px;box-shadow:0 10px 30px #0003}
+.balance{text-align:center}.balance small{opacity:.65}.balance strong{display:block;font-size:40px;margin:5px}
+.mine{width:180px;height:180px;border-radius:50%;border:0;background:linear-gradient(145deg,#ffd54a,#ff9f1a);font-size:52px;cursor:pointer;box-shadow:0 12px 30px #ffae2455;transition:.1s}.mine:active{transform:scale(.94)}
+.center{text-align:center}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#ffffff0d;border-radius:14px;padding:12px;text-align:center}.stat b{display:block;font-size:20px;margin-top:4px}
+button.action{width:100%;padding:13px;border:0;border-radius:13px;background:#168cff;color:white;font-weight:bold;margin-top:10px;cursor:pointer}
+.progress{height:9px;background:#ffffff18;border-radius:9px;overflow:hidden}.bar{height:100%;width:0;background:#ffd54a}
+.msg{min-height:20px;text-align:center;color:#ffd86b;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div><h1>⛏️ Mining Rush</h1><div class="sub">Telegram Mini Game</div></div><div>👤 <span id="user">Player</span></div></div>
+
+  <div class="card balance">
+    <small>YOUR POINTS</small>
+    <strong id="points">0</strong>
+    <div class="sub">⛏️ 1 tap = 1 point</div>
+  </div>
+
+  <div class="card center">
+    <button class="mine" id="mine">⛏️</button>
+    <div class="msg" id="msg">Tap to mine!</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat">🔥 Streak<b id="streak">0</b></div>
+      <div class="stat">🎁 Daily<b id="daily">Ready</b></div>
+    </div>
+    <button class="action" id="dailyBtn">🎁 Claim Daily Bonus</button>
+    <button class="action" id="shareBtn">👥 Invite Friends</button>
+  </div>
+</div>
+
+<script>
+const KEY="miningRushSave";
+let s=JSON.parse(localStorage.getItem(KEY)||'{"points":0,"streak":0,"lastDaily":""}');
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();document.getElementById("user").textContent=tg.initDataUnsafe?.user?.first_name||"Player";}
+function save(){localStorage.setItem(KEY,JSON.stringify(s));render();}
+function render(){
+ document.getElementById("points").textContent=s.points.toLocaleString();
+ document.getElementById("streak").textContent=s.streak;
+ const today=new Date().toISOString().slice(0,10);
+ const claimed=s.lastDaily===today;
+ document.getElementById("daily").textContent=claimed?"Claimed":"Ready";
+ document.getElementById("dailyBtn").disabled=claimed;
+ document.getElementById("dailyBtn").style.opacity=claimed?".55":"1";
+ document.getElementById("bar").style.width=(s.points%100)+"%";
+}
+document.getElementById("mine").onclick=()=>{
+ s.points++; document.getElementById("msg").textContent="⛏️ +1 point!";
+ save();
+};
+document.getElementById("dailyBtn").onclick=()=>{
+ const today=new Date().toISOString().slice(0,10);
+ if(s.lastDaily!==today){s.points+=50;s.streak++;s.lastDaily=today;document.getElementById("msg").textContent="🎁 +50 daily bonus!";save();}
+};
+document.getElementById("shareBtn").onclick=()=>{
+ const text="Join me in Mining Rush! ⛏️";
+ if(tg?.switchInlineQuery) tg.switchInlineQuery(text,["users"]);
+ else navigator.clipboard?.writeText(text).then(()=>document.getElementById("msg").textContent="📋 Invite text copied!");
+};
+render();
+</script>
+</body>
+</html>
